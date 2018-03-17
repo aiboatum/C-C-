@@ -13,14 +13,13 @@ int f_scanf(FILE *p,char *ch){
         while(!isalpha(c=getc(p))&&c!=EOF)
         continue;//排除开头非字母
         ch[0]=c;
-        //for(int i=0;fscanf(p,"%c",c)&&isalpha(c);i++)
-        //for(int i=0;(c=getc(p))&&isalpha(c);i++)
         int i=1;
         while(isalpha(c=getc(p))&&c!=EOF){
         ch[i++]=c;
         }
         ch[i]='\0';
-        return 1;
+        if(c==EOF)return 0;
+        else return 1;
 }
 int main(void){
         struct Words s[1000]={{.count=0,.tag=0}};

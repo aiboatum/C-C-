@@ -12,6 +12,5 @@ int main(void) {
 	while (getchar() != '\n')continue;
 	}
 	printf("I knew you could do it!\n");
-	//system("pause");
 	return 0;
 }

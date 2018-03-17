@@ -3,7 +3,9 @@
         "xlocale": "c",
         "string.h": "c",
         "limits": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "utility": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

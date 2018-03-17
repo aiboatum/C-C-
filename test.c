@@ -1,26 +1,39 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <ctype.h>
 typedef struct Words{
-        char s[30];
-        int count;
+        char s[100];
+        int n;//单词长度
 }Words;
-//单词间隔以空格 制表符 标点符号等'\n'不单独作为间隔，
-char * fscanf(FILE *);//返回单词
-char * fscanf(FILE * p){
-        char ch;
-        int n=0;
-        while(isalpha(ch=getc(p))){
-        ++n;
+int foo_1(char *,int *);
+int foo_1(char *s,int *n){
+        int ch;
+        while(!isalpha(ch=getc(stdin))&&ch!='\n')
+        continue;
+        *s=ch;
+        int i=1;
+        while(isalpha(ch=getc(stdin))&&ch!='\n'){
+        s[i++]=ch;
         }
-        CHAR 
+        s[i]='\0';
+        *n=i;
+        if(ch=='\n')return 0;
+        else return 1 ;
 }
 int main(void){
-FILE *pfile=fopen("test.txt","r");
-if(!pfile){puts("Error occurs!");exit(1);}
-char *s[128]={NULL};
-char ch;
-while(isalpha(ch=getc(pfile))){
-
-}
+struct Words s={{s.n=0}};
+int n;
+char temp[100];
+printf("%d  %d\n",foo_1(temp,&n),n);
+// char temp[100];
+// int n;
+// while(foo_1(temp,&n)!=0){
+//         printf("%d\n",n);
+//         if(s.n<n){
+//                 strcpy(s.s,temp);
+//                 s.n=n;
+//         }
+//         else continue;
+// }
+// printf("%s : %d",s.s,s.n);
 }

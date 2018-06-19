@@ -1,4 +1,4 @@
-//this program present that两级dereference的赋值不安全
+//该用例展示两级dereference的赋值不安全
 #include <stdio.h>
 //gcc compiler will give the warning :assignment from incompatible pointer type
 //but it does work!(this is undefined behavior )

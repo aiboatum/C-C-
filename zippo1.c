@@ -2,7 +2,7 @@
 #include <stdio.h>
 //gcc compiler will give the warning :assignment from incompatible pointer type
 //but it does work!(this is undefined behavior )
-//may be ok!may be no ok! 
+//It would harm our program.
 int main(void){
     const int **p2;
     int *p1;

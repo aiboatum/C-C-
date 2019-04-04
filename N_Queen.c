@@ -23,6 +23,6 @@ void try(int n,int A, int B, int C){
         count=(B==(1<<n)-1)?(count+1):count;
 }
 int main(){
-    try(15,0, 0, 0);
+    try(17,0, 0, 0);
     printf("%d\n", count);
 }

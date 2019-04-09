@@ -2,18 +2,18 @@
 #include <stdlib.h>
 char * itoa_(int n,char *b);
 char * itoa_(int n,char *b){
-char *p=b;
-const char digit[]="0123456789";
-if(n<0){
-    *p++='-';
-    n*=-1;
-}
-int shifter=n;
-do{//Move to where representation end
-    ++p;
-    shifter/=10;
-}while(shifter);
-*p='\0';
+    char *p=b;
+    const char digit[]="0123456789";
+    if(n<0){
+        *p++='-';
+        n*=-1;
+    }
+    int shifter=n;
+    do{//Move to where representation end
+        ++p;
+        shifter/=10;
+    }while(shifter);
+    *p='\0';
 do{//Move back
 *--p=digit[n%10];//取个位上的数字
 n/=10;

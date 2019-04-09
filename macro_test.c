@@ -1,6 +1,7 @@
 #include <stdio.h>
 #define showlist(...) puts(#__VA_ARGS__)
 int main(void){
-    showlist();
+    showlist("Hello!");
+    showlist(hello);
     return 0;
 }

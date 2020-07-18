@@ -59,6 +59,7 @@
         "set": "cpp",
         "sstream": "cpp",
         "stack": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "complex": "cpp"
     }
 }

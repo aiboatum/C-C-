@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-typedef struct HashNode{
+typedef struct _HashNode{
     int key;
     int index;
 }HashNode;
 
-typedef struct HashMap{
+typedef struct _HashMap{
     int size;
     HashNode ** stroage;
 }HashMap;

@@ -60,6 +60,7 @@
         "sstream": "cpp",
         "stack": "cpp",
         "xloctime": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "unordered_set": "cpp"
     }
 }

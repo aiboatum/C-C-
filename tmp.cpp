@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+vector<int> m;
+#include <vector>
+using namespace std;
 #define MAX_SIZE 20000
 
 enum L_OR_R{

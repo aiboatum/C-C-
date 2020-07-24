@@ -28,14 +28,14 @@ namespace mystl
 template <class T>
 const T& max(const T& lhs, const T& rhs)
 {
-  return lhs < rhs ? rhs : lhs;
+  	return lhs < rhs ? rhs : lhs;
 }
 
 // 重载版本使用函数对象 comp 代替比较操作
 template <class T, class Compare>
 const T& max(const T& lhs, const T& rhs, Compare comp)
 {
-  return comp(lhs, rhs) ? rhs : lhs;
+  	return comp(lhs, rhs) ? rhs : lhs;
 }
 
 /*****************************************************************************************/
@@ -45,14 +45,14 @@ const T& max(const T& lhs, const T& rhs, Compare comp)
 template <class T>
 const T& min(const T& lhs, const T& rhs)
 {
-  return rhs < lhs ? rhs : lhs;
+  	return rhs < lhs ? rhs : lhs;
 }
 
 // 重载版本使用函数对象 comp 代替比较操作
 template <class T, class Compare>
 const T& min(const T& lhs, const T& rhs, Compare comp)
 {
-  return comp(rhs, lhs) ? rhs : lhs;
+  	return comp(rhs, lhs) ? rhs : lhs;
 }
 
 /*****************************************************************************************/
@@ -75,11 +75,11 @@ OutputIter
 unchecked_copy_cat(InputIter first, InputIter last, OutputIter result, 
                    mystl::input_iterator_tag)
 {
-  for (; first != last; ++first, ++result)
-  {
-    *result = *first;
-  }
-  return result;
+	for (; first != last; ++first, ++result)
+	{
+		*result = *first;
+	}
+	return result;
 }
 
 // ramdom_access_iterator_tag 版本
@@ -88,11 +88,11 @@ OutputIter
 unchecked_copy_cat(RandomIter first, RandomIter last, OutputIter result,
                    mystl::random_access_iterator_tag)
 {
-  for (auto n = last - first; n > 0; --n, ++first, ++result)
-  {
-    *result = *first;
-  }
-  return result;
+	for (auto n = last - first; n > 0; --n, ++first, ++result)
+	{
+		*result = *first;
+	}
+	return result;
 }
 
 template <class InputIter, class OutputIter>
@@ -206,11 +206,11 @@ template <class InputIter, class Size, class OutputIter>
 mystl::pair<InputIter, OutputIter>
 unchecked_copy_n(InputIter first, Size n, OutputIter result, mystl::input_iterator_tag)
 {
-  for (; n > 0; --n, ++first, ++result)
-  {
-    *result = *first;
-  }
-  return mystl::pair<InputIter, OutputIter>(first, result);
+    for (; n > 0; --n, ++first, ++result)
+    {
+      *result = *first;
+    }
+    return mystl::pair<InputIter, OutputIter>(first, result);
 }
 
 template <class RandomIter, class Size, class OutputIter>
@@ -218,8 +218,8 @@ mystl::pair<RandomIter, OutputIter>
 unchecked_copy_n(RandomIter first, Size n, OutputIter result, 
                  mystl::random_access_iterator_tag)
 {
-  auto last = first + n;
-  return mystl::pair<RandomIter, OutputIter>(last, mystl::copy(first, last, result));
+    auto last = first + n;
+    return mystl::pair<RandomIter, OutputIter>(last, mystl::copy(first, last, result));
 }
 
 template <class InputIter, class Size, class OutputIter>
@@ -432,7 +432,7 @@ void fill_cat(RandomIter first, RandomIter last, const T& value,
 template <class ForwardIter, class T>
 void fill(ForwardIter first, ForwardIter last, const T& value)
 {
-  fill_cat(first, last, value, iterator_category(first));
+  	fill_cat(first, last, value, iterator_category(first));
 }
 
 /*****************************************************************************************/

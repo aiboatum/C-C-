@@ -277,23 +277,23 @@ struct rb_tree_iterator :public rb_tree_iterator_base<T>
     this->inc();
     return *this;
   }
-  self operator++(int)
-  {
-    self tmp(*this);
-    this->inc();
-    return tmp;
-  }
-  self& operator--()
-  {
-    this->dec();
-    return *this;
-  }
-  self operator--(int)
-  {
-    self tmp(*this);
-    this->dec();
-    return tmp;
-  }
+    self operator++(int)
+    {
+      self tmp(*this);
+      this->inc();
+      return tmp;
+    }
+    self& operator--()
+    {
+      this->dec();
+      return *this;
+    }
+    self operator--(int)
+    {
+      self tmp(*this);
+      this->dec();
+      return tmp;
+    }
 };
 
 template <class T>

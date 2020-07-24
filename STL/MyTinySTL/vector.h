@@ -71,7 +71,7 @@ private:
 
 public:
 	// 构造、复制、移动、析构函数
-	// 构造一个空vector
+	// 构造一个空vector（初始大小为16）
 	vector() noexcept{ try_init(); }
 
 	// 构造一个size为n的vector，每个元素使用value_type()初始化
@@ -443,7 +443,7 @@ typename vector<_Type>::iterator
 	{
 		reallocate_emplace(xpos, mystl::forward<Args>(args)...);
 	}
-  return begin() + n;
+  	return begin() + n;
 }
 
 // 在尾部就地构造元素，避免额外的复制或移动开销
@@ -533,12 +533,16 @@ template <class _Type>
 typename vector<_Type>::iterator
 vector<_Type>::erase(const_iterator pos)
 {
-  MYSTL_DEBUG(pos >= begin() && pos < end());
-  iterator xpos = _start + (pos - begin());
-  mystl::move(xpos + 1, _finish, xpos);
-  data_allocator::destroy(_finish - 1);
-  --_finish;
-  return xpos;
+	// 检测删除位置合法性
+	MYSTL_DEBUG(pos >= begin() && pos < end());
+	iterator xpos = _start + (pos - begin());
+	// [start-------------pos----------finish]
+	// [pos+1,finish)区间向前move一个单元即可
+	mystl::move(xpos + 1, _finish, xpos);
+	// 析构掉erase的元素
+	data_allocator::destroy(_finish - 1);
+	--_finish;	// 调整水位
+	return xpos;
 }
 
 // 删除[first, last)上的元素
@@ -546,12 +550,19 @@ template <class _Type>
 typename vector<_Type>::iterator
 vector<_Type>::erase(const_iterator first, const_iterator last)
 {
-  MYSTL_DEBUG(first >= begin() && last <= end() && !(last < first));
-  const auto n = first - begin();
-  iterator r = _start + (first - begin());
-  data_allocator::destroy(mystl::move(r + (last - first), _finish, r), _finish);
-  _finish = _finish - (last - first);
-  return _start + n;
+	// 检测区间合法性
+	MYSTL_DEBUG(first >= begin() && last <= end() && !(last < first));
+	// [start----------first--------------last----------finish]
+	// 首先应该将[last,finish)区间的元素move到前面
+	// 即，move(last,_finish,first)，返回move后的最后一个iterator
+	// 然后，destroy调用析构函数，释放多余元素：！本身空间不回收
+	const auto n = first - begin();
+	iterator r = _start + (first - begin());
+	data_allocator::destroy(
+		mystl::move(r + (last - first), _finish, r),
+		_finish);
+	_finish = _finish - (last - first); 	// 调整水位
+	return _start + n;
 }
 
 // 重置容器大小
@@ -575,7 +586,7 @@ void vector<_Type>::resize(size_type new_size, const value_type& value)
 template <class _Type>
 void vector<_Type>::swap(vector<_Type>& rhs) noexcept
 {
-	if (this != &rhs)
+	if (this != &rhs)	// 自交换检测
 	{
 		mystl::swap(_start, rhs._start);
 		mystl::swap(_finish, rhs._finish);
@@ -627,20 +638,23 @@ void vector<_Type>::init_space(size_type size, size_type cap)
 }
 
 // fill_init 函数
+// 1. 申请一定空间，该空间capacity一定要大于n---> 调用init_space申请一个size为n，capacity为 init_size raw空间
+// 2. 由于是raw空间，因此最好采用unitialized_fill_n
 template <class _Type>
 void vector<_Type>::
 fill_init(size_type n, const value_type& value)
 {
-  const size_type init_size = mystl::max(static_cast<size_type>(16), n);
-  init_space(n, init_size);
-  mystl::uninitialized_fill_n(_start, n, value);
+	const size_type init_size = mystl::max(static_cast<size_type>(16), n);
+	init_space(n, init_size);
+	mystl::uninitialized_fill_n(_start, n, value);
 }
 
 // range_init 函数
+// 和fill_init思想类似，先确定申请空间的大小
+// 然后使用copy构造
 template <class _Type>
 template <class Iter>
-void vector<_Type>::
-range_init(Iter first, Iter last)
+void vector<_Type>::range_init(Iter first, Iter last)
 {
 	const size_type init_size = mystl::max(static_cast<size_type>(last - first),
 											static_cast<size_type>(16));
@@ -683,20 +697,20 @@ template <class _Type>
 void vector<_Type>::
 fill_assign(size_type n, const value_type& value)
 {
-  if (n > capacity())
-  {
-    vector tmp(n, value);
-    swap(tmp);
-  }
-  else if (n > size())
-  {
-    mystl::fill(begin(), end(), value);
-    _finish = mystl::uninitialized_fill_n(_finish, n - size(), value);
-  }
-  else
-  {
-    erase(mystl::fill_n(_start, n, value), _finish);
-  }
+	if (n > capacity())
+	{
+		vector tmp(n, value);
+		swap(tmp);
+	}
+	else if (n > size())
+	{
+		mystl::fill(begin(), end(), value);
+		_finish = mystl::uninitialized_fill_n(_finish, n - size(), value);
+	}
+	else
+	{
+		erase(mystl::fill_n(_start, n, value), _finish);
+	}
 }
 
 // copy_assign 函数
@@ -705,19 +719,19 @@ template <class IIter>
 void vector<_Type>::
 copy_assign(IIter first, IIter last, input_iterator_tag)
 {
-  auto cur = _start;
-  for (; first != last && cur != _finish; ++first, ++cur)
-  {
-    *cur = *first;
-  }
-  if (first == last)
-  {
-    erase(cur, _finish);
-  }
-  else
-  {
-    insert(_finish, first, last);
-  }
+  	auto cur = _start;
+	for (; first != last && cur != _finish; ++first, ++cur)
+	{
+		*cur = *first;
+	}
+	if (first == last)
+	{
+		erase(cur, _finish);
+	}
+	else
+	{
+		insert(_finish, first, last);
+	}
 }
 
 // 用 [first, last) 为容器赋值
@@ -748,7 +762,7 @@ copy_assign(FIter first, FIter last, forward_iterator_tag)
   }
 }
 
-// 重新分配空间并在 pos 处就地构造元素
+// 重新分配空间并在 pos 处就地（in-place）构造元素
 template <class _Type>
 template <class ...Args>
 void vector<_Type>::
@@ -802,6 +816,7 @@ void vector<_Type>::reallocate_insert(iterator pos, const value_type& value)
 }
 
 // fill_insert 函数
+// 从pos处开始插入n个值为value的元素
 template <class _Type>
 typename vector<_Type>::iterator 
 		vector<_Type>::fill_insert(
@@ -809,101 +824,118 @@ typename vector<_Type>::iterator
 			size_type n,
 			const value_type& value)
 {
-  if (n == 0)
-    return pos;
-  const size_type xpos = pos - _start;
-  const value_type value_copy = value;  // 避免被覆盖
-  if (static_cast<size_type>(end_of_storage - _finish) >= n)
-  { // 如果备用空间大于等于增加的空间
-    const size_type after_elems = _finish - pos;
-    auto old_end = _finish;
-    if (after_elems > n)
-    {
-      mystl::uninitialized_copy(_finish - n, _finish, _finish);
-      _finish += n;
-      mystl::move_backward(pos, old_end - n, old_end);
-      mystl::uninitialized_fill_n(pos, n, value_copy);
-    }
-    else
-    {
-      _finish = mystl::uninitialized_fill_n(_finish, n - after_elems, value_copy);
-      _finish = mystl::uninitialized_move(pos, old_end, _finish);
-      mystl::uninitialized_fill_n(pos, after_elems, value_copy);
-    }
-  }
-  else
-  { // 如果备用空间不足
-    const auto new_size = get_new_cap(n);
-    auto new_begin = data_allocator::allocate(new_size);
-    auto new_end = new_begin;
-    try
-    {
-      new_end = mystl::uninitialized_move(_start, pos, new_begin);
-      new_end = mystl::uninitialized_fill_n(new_end, n, value);
-      new_end = mystl::uninitialized_move(pos, _finish, new_end);
-    }
-    catch (...)
-    {
-      destroy_and_recover(new_begin, new_end, new_size);
-      throw;
-    }
-    data_allocator::deallocate(_start, end_of_storage - _start);
-    _start = new_begin;
-    _finish = new_end;
-    end_of_storage = _start + new_size;
-  }
-  return _start + xpos;
+	// 检查插入位置
+	MYSTL_DEBUG(pos>=begin()&&pos>=end());
+	if (n == 0)
+		return pos;
+	const size_type xpos = pos - _start;
+	const value_type value_copy = value;  // 避免被覆盖
+	// 如果备用空间大于等于增加的空间
+	if (static_cast<size_type>(end_of_storage - _finish) >= n)
+	{ 
+		const size_type after_elems = _finish - pos;
+		auto old_end = _finish;
+		if (after_elems > n)
+		{
+			// finish后面的空间是raw空间，应使用unintialized_copy，
+			// 将finish前n个元素后移到原finish开始处n个位置
+			mystl::uninitialized_copy(_finish - n, _finish, _finish);
+			_finish += n; // 调整水位
+			// 将来[pos,old_end-n)的元素的move后移即可
+			mystl::move_backward(pos, old_end - n, old_end);
+			// 空出来的空间上construct n个元素
+			mystl::uninitialized_fill_n(pos, n, value_copy);
+		}
+		else
+		{	// [start-----pos-----finish***********end_of_storage]
+			// 后面空出来的n-(finish-pos)个位置先填充上value_copy
+			_finish = // 这里的水位已经发生改变
+				mystl::uninitialized_fill_n(_finish, n - after_elems, value_copy);
+			// [start-----pos-----old_end-----finish******end_of_storage]
+			// 再将pos------finish原元素move到改变后的finish起始处
+			_finish = mystl::uninitialized_move(pos, old_end, _finish);
+			// 填充
+			mystl::uninitialized_fill_n(pos, after_elems, value_copy);
+		}
+  	}
+  	else
+	{ 	// 如果备用空间不足
+		// 申请capacity+n个大小的空间
+		const auto new_size = get_new_cap(n);
+		auto new_begin = data_allocator::allocate(new_size);
+		auto new_end = new_begin;
+		try
+		{
+			// [start,pos)位置的元素move到_new_begin起始处
+			new_end = mystl::uninitialized_move(_start, pos, new_begin);
+			// [new_end,)填充n个value元素
+			new_end = mystl::uninitialized_fill_n(new_end, n, value);
+			// 再加其余的元素move过来
+			new_end = mystl::uninitialized_move(pos, _finish, new_end);
+		}
+		catch (...)
+		{
+			destroy_and_recover(new_begin, new_end, new_size);
+			throw;
+		}
+		// 回收原资源
+		data_allocator::deallocate(_start, end_of_storage - _start);
+		_start = new_begin;
+		_finish = new_end;
+		end_of_storage = _start + new_size;
+	}
+	return _start + xpos;
 }
 
 // copy_insert 函数
+// 将pos
 template <class _Type>
 template <class IIter>
-void vector<_Type>::
-copy_insert(iterator pos, IIter first, IIter last)
+void vector<_Type>::copy_insert(iterator pos, IIter first, IIter last)
 {
-  if (first == last)
-    return;
-  const auto n = mystl::distance(first, last);
-  if ((end_of_storage - _finish) >= n)
-  { // 如果备用空间大小足够
-    const auto after_elems = _finish - pos;
-    auto old_end = _finish;
-    if (after_elems > n)
-    {
-      _finish = mystl::uninitialized_copy(_finish - n, _finish, _finish);
-      mystl::move_backward(pos, old_end - n, old_end);
-      mystl::uninitialized_copy(first, last, pos);
-    }
-    else
-    {
-      auto mid = first;
-      mystl::advance(mid, after_elems);
-      _finish = mystl::uninitialized_copy(mid, last, _finish);
-      _finish = mystl::uninitialized_move(pos, old_end, _finish);
-      mystl::uninitialized_copy(first, mid, pos);
-    }
-  }
-  else
-  { // 备用空间不足
-    const auto new_size = get_new_cap(n);
-    auto new_begin = data_allocator::allocate(new_size);
-    auto new_end = new_begin;
-    try
-    {
-      new_end = mystl::uninitialized_move(_start, pos, new_begin);
-      new_end = mystl::uninitialized_copy(first, last, new_end);
-      new_end = mystl::uninitialized_move(pos, _finish, new_end);
-    }
-    catch (...)
-    {
-      destroy_and_recover(new_begin, new_end, new_size);
-      throw;
-    }
-    data_allocator::deallocate(_start, end_of_storage - _start);
-    _start = new_begin;
-    _finish = new_end;
-    end_of_storage = _start + new_size;
-  }
+	if (first == last)
+		return;
+	const auto n = mystl::distance(first, last);
+	if ((end_of_storage - _finish) >= n)
+	{ // 如果备用空间大小足够
+		const auto after_elems = _finish - pos;
+		auto old_end = _finish;
+		if (after_elems > n)
+		{
+			_finish = mystl::uninitialized_copy(_finish - n, _finish, _finish);
+			mystl::move_backward(pos, old_end - n, old_end);
+			mystl::uninitialized_copy(first, last, pos);
+		}
+		else
+		{
+			auto mid = first;
+			mystl::advance(mid, after_elems);
+			_finish = mystl::uninitialized_copy(mid, last, _finish);
+			_finish = mystl::uninitialized_move(pos, old_end, _finish);
+			mystl::uninitialized_copy(first, mid, pos);
+		}
+	}
+	else
+	{ // 备用空间不足
+		const auto new_size = get_new_cap(n);
+		auto new_begin = data_allocator::allocate(new_size);
+		auto new_end = new_begin;
+		try
+		{
+			new_end = mystl::uninitialized_move(_start, pos, new_begin);
+			new_end = mystl::uninitialized_copy(first, last, new_end);
+			new_end = mystl::uninitialized_move(pos, _finish, new_end);
+		}
+		catch (...)
+		{
+			destroy_and_recover(new_begin, new_end, new_size);
+			throw;
+		}
+		data_allocator::deallocate(_start, end_of_storage - _start);
+		_start = new_begin;
+		_finish = new_end;
+		end_of_storage = _start + new_size;
+	}
 }
 
 // reinsert 函数
@@ -932,38 +964,41 @@ void vector<_Type>::reinsert(size_type size)
 template <class _Type>
 bool operator==(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return lhs.size() == rhs.size() &&
-    mystl::equal(lhs.begin(), lhs.end(), rhs.begin());
+	// 先比较两个vector的大小，再调用algorithm中的equal函数
+	return lhs.size() == rhs.size() &&
+		mystl::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template <class _Type>
 bool operator<(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return mystl::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), lhs.end());
+	// 基于字典序比较
+  	return mystl::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), lhs.end());
 }
 
 template <class _Type>
 bool operator!=(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return !(lhs == rhs);
+	// 调用==操作符
+	return !(lhs == rhs);
 }
 
 template <class _Type>
 bool operator>(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return rhs < lhs;
+  	return rhs < lhs;
 }
 
 template <class _Type>
 bool operator<=(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return !(rhs < lhs);
+  	return !(rhs < lhs);
 }
 
 template <class _Type>
 bool operator>=(const vector<_Type>& lhs, const vector<_Type>& rhs)
 {
-  return !(lhs < rhs);
+  	return !(lhs < rhs);
 }
 
 // 重载 mystl 的 swap

@@ -1,7 +1,7 @@
 ﻿#ifndef MYTINYSTL_UNINITIALIZED_H_
 #define MYTINYSTL_UNINITIALIZED_H_
 
-// 这个头文件用于对未初始化空间构造元素
+// 这个头文件用于对未初始化空间（raw空间）构造元素
 
 #include "algobase.h"
 #include "construct.h"
@@ -16,13 +16,20 @@ namespace mystl
 // uninitialized_copy(first,last,result)
 // 把 [first, last) 上的内容复制到以 result 为起始处的空间，返回复制结束的位置
 /*****************************************************************************************/
+/***
+ * 猜测这里应该是当iterator指向的不是rwa空间时，可直接copy时，调用本版本
+ */
 template <class InputIter, class ForwardIter>
 ForwardIter 
 unchecked_uninit_copy(InputIter first, InputIter last, ForwardIter result, std::true_type)
 {
-  return mystl::copy(first, last, result);
+  	return mystl::copy(first, last, result);
 }
 
+
+/***
+ * 猜测这里应该是当iterator指向的raw空间时，必须由空间配置器construct时调用本版本
+ */
 template <class InputIter, class ForwardIter>
 ForwardIter
 unchecked_uninit_copy(InputIter first, InputIter last, ForwardIter result, std::false_type)
@@ -32,17 +39,20 @@ unchecked_uninit_copy(InputIter first, InputIter last, ForwardIter result, std::
 	{
 		for (; first != last; ++first, ++cur)
 		{
-		mystl::construct(&*cur, *first);
+			mystl::construct(&*cur, *first);
 		}
 	}
 	catch (...)
 	{
+		// 出现异常，析构掉已构造的元素
 		for (; result != cur; ++result)
 		mystl::destroy(&*result);
 	}
 	return cur;
 }
 
+
+// 根据iterator的属性来确定调用哪个版本的unchecked_uninit_copy
 template <class InputIter, class ForwardIter>
 ForwardIter uninitialized_copy(InputIter first, InputIter last, ForwardIter result)
 {
@@ -60,27 +70,27 @@ template <class InputIter, class Size, class ForwardIter>
 ForwardIter 
 unchecked_uninit_copy_n(InputIter first, Size n, ForwardIter result, std::true_type)
 {
-  return mystl::copy_n(first, n, result).second;
+  	return mystl::copy_n(first, n, result).second;
 }
 
 template <class InputIter, class Size, class ForwardIter>
 ForwardIter
 unchecked_uninit_copy_n(InputIter first, Size n, ForwardIter result, std::false_type)
 {
-  auto cur = result;
-  try
-  {
-    for (; n > 0; --n, ++cur, ++first)
-    {
-      mystl::construct(&*cur, *first);
-    }
-  }
-  catch (...)
-  {
-    for (; result != cur; ++result)
-      mystl::destroy(&*result);
-  }
-  return cur;
+	auto cur = result;
+	try
+	{
+		for (; n > 0; --n, ++cur, ++first)
+		{
+		mystl::construct(&*cur, *first);
+		}
+	}
+	catch (...)
+	{
+		for (; result != cur; ++result)
+		mystl::destroy(&*result);
+	}
+	return cur;
 }
 
 template <class InputIter, class Size, class ForwardIter>
@@ -100,26 +110,26 @@ template <class ForwardIter, class T>
 void 
 unchecked_uninit_fill(ForwardIter first, ForwardIter last, const T& value, std::true_type)
 {
-  mystl::fill(first, last, value);
+  	mystl::fill(first, last, value);
 }
 
 template <class ForwardIter, class T>
 void 
 unchecked_uninit_fill(ForwardIter first, ForwardIter last, const T& value, std::false_type)
 {
-  auto cur = first;
-  try
-  {
-    for (; cur != last; ++cur)
-    {
-      mystl::construct(&*cur, value);
-    }
-  }
-  catch (...)
-  {
-    for (;first != cur; ++first)
-      mystl::destroy(&*first);
-  }
+	auto cur = first;
+	try
+	{
+		for (; cur != last; ++cur)
+		{
+		mystl::construct(&*cur, value);
+		}
+	}
+	catch (...)
+	{
+		for (;first != cur; ++first)
+		mystl::destroy(&*first);
+	}
 }
 
 template <class ForwardIter, class T>

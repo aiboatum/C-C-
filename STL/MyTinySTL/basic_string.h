@@ -2056,7 +2056,7 @@ template <class CharType, class CharTraits>
 void swap(basic_string<CharType, CharTraits>& lhs,
           basic_string<CharType, CharTraits>& rhs) noexcept
 {
-  lhs.swap(rhs);
+    lhs.swap(rhs);
 }
 
 // 特化 mystl::hash

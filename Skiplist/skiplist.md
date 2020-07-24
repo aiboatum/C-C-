@@ -148,6 +148,63 @@ void SkipList::insertElement(int key) {
 
 由此插入操作即可完成。
 
+### 搜索操作
+
+搜索操作分析略过，这里只给出代码：
+```c++
+void SkipList::searchElement(int key) {
+	SkipListNode* cur = header;
+	for (int i = level; i > -1; --i) {
+		while (cur->forward[i] && cur->forward[i]->key < key)cur = cur->forward[i];
+	}
+	cur = cur->forward[0];
+	if (cur && cur->key == key) {
+		cout << "Found Key: " << key << endl;
+	}
+    else {
+        cout << "Not fount key: "<<key << endl;
+    }
+}
+```
+
+### 删除操作
+
+删除操作同样需要`update`数组，来维持删除节点后的链表的连接工作。我们考虑一个特殊的删除例子，如下：
+![](image/Skip-List.jpg)
+:exclamation:该例子中，删除节点6会导致当前层数（levele）改变。
+
+代码如下，
+```c++
+void SkipList::deleteElement(int key) { 
+    Node *current = header; 
+	SkipListNode* current = header;
+	vector<SkipListNode*> update(MAXLVL + 1, NULL);
+
+    for(int i = level; i >= 0; i--) 
+    { 
+        while(current->forward[i] != NULL  && 
+              current->forward[i]->key < key) 
+            current = current->forward[i]; 
+        update[i] = current; 
+    } 
+    current = current->forward[0]; 
+  
+    if(current != NULL and current->key == key) { 
+        // 从level 0向上检查，将链表的连接重新连接起来
+        for(int i=0;i<=level;i++) {
+            // 此条件满足，说明该层以及上面的层，都不需改变 
+            if(update[i]->forward[i] != current) 
+                break; 
+            update[i]->forward[i] = current->forward[i]; 
+        } 
+        // Remove levels having no elements  
+        while( level > 0 && header->forward[level] == NULL) 
+            level--; 
+         cout<<"Successfully deleted key "<<key<<"\n"; 
+    } 
+}; 
+```
+
 ## 随机性下的 Skip List 性能如何？
 
 节点插入时随机产生一个层数，仅仅依靠这样一个简单的随机数操作而构建出来的多层链表结构，能保证它有一个良好的查找性能吗？为了回答这个疑问，我们需要分析 skip list 的统计性能。

@@ -11,13 +11,13 @@
 2. 合法，则在该处摆上一个皇后，然后递归向下进行
 3. 递归出口：到达最后一行时，即`row==N`时，说明已经得到一个解决方案
 
-代码略过，见[](./n_queen1.cpp)文件。
+代码略过，见[n_queen1.cpp](n_queen1.cpp)文件。
 
 ## 位运算解决
 
 > 本文主要参考：[Matrix67位运算解决n皇后问题](http://www.matrix67.com/blog/archives/266)
 
-代码见[](N_Queen.cpp)和[](n_queen2.cpp)
+代码见[N_Queen.cpp](N_Queen.cpp)和[n_queen2.cpp](n_queen2.cpp)
 
 我们使用`row`，`ld`和`rd`，分别表示在纵列和两个对角线方向的限制条件下，这一行的哪些地方不能放。以下图为例子，
 ![](image/1.gif)

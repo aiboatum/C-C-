@@ -65,12 +65,10 @@ SkipList::SkipList(int MAXLVL, float P) {
 	this->MAXLVL = MAXLVL; 
 	this->P = P; 
 	level = 0; 
-	// create header node and initialize key to -1
     // heard结点起辅助作用，不存储真正的结点 
 	header = new SkipListNode(-1, MAXLVL); 
 }; 
 
-// create random level for node 
 int SkipList::randomLevel() 
 { 
 	float r = (float)rand()/RAND_MAX; 
@@ -83,54 +81,39 @@ int SkipList::randomLevel()
 	return lvl; 
 }; 
 
-// create new node 
 SkipListNode* SkipList::createNode(int key, int level) 
 { 
 	SkipListNode *n = new SkipListNode(key, level); 
 	return n; 
 }; 
 
-// Insert given key in skip list 
+
+// 插入操作
 void SkipList::insertElement(int key){
 	SkipListNode *current = header; 
-
-	// create update array and initialize it 
-    // update的作用是将结点连接起来
+    // update的作用：是将新插入的结点正确连接到各层链表的辅助数组
     vector<SkipListNode *> update(MAXLVL+1,NULL);
 
-	/* start from highest level of skip list 
-		move the current pointer forward while key 
-		is greater than key of node next to current 
-		Otherwise inserted current in update and 
-		move one level down and continue search 
-	*/
+	// 从hearder开始搜索，从最高层依次向最底层搜索
+	// 如果node的next（即响应的forward[i]）的key大于等于新插入的key
+	// 则向下一层的链表搜索
+	// for循环结束，cur指向的next节点：1. 大于新插入的key 2. 等于
 	for (int i = level; i >= 0; i--) 
 	{ 
+		// 查找第一个node的next节点的key不小于（可能等于）新插入节点的key
 		while (current->forward[i] != NULL && 
 			current->forward[i]->key < key) 
-			current = current->forward[i]; 
+			current = current->forward[i];
+		// 说明如果新建入的节点有level i层，则其在level i层链表中，应插到这里的update[i]后 
 		update[i] = current; 
 	} 
-
-	/* reached level 0 and forward pointer to 
-	right, which is desired position to 
-	insert key. 
-	*/
 	current = current->forward[0]; 
 
-	/* if current is NULL that means we have reached 
-	to end of the level or current's key is not equal 
-	to key to insert that means we have to insert 
-	node between update[0] and current node */
+	// 等同于insert_unique，存在相同元素则不插入
+	// 如果去掉下面的条件，则是insert_multi
 	if (current == NULL || current->key != key) 
 	{ 
-		// Generate a random level for node 
 		int rlevel = randomLevel(); 
-
-		// If random level is greater than list's current 
-		// level (node with highest level inserted in 
-		// list so far), initialize update value with pointer 
-		// to header for further use 
         // 如果新插入的node，其高度大于当前skiplist的高度，则更新level的值
         // 并且update全置为header
 		if (rlevel > level) 
@@ -157,18 +140,43 @@ void SkipList::insertElement(int key){
 }; 
 
 
-void SkipList::deleteElement(int key) {
-	SkipListNode* cur = header;
-	vector<SkipListNode*> update(MAXLVL + 1, NULL);
-	for (int i = level; i > -1; --i) {
-		while (cur->forward[i] != NULL && cur->forward[i]->key < key) {
-			cur = cur->forward[i];
-		}
-		update[i] = cur;
-	}
-	while (level > 0 && header->forward[level] == 0)level--;
-	cout << "Successfully deleted key " << key << endl;
-}
+// Delete element from skip list 
+void SkipList::deleteElement(int key) 
+{ 
+	SkipListNode *current = header; 
+
+	// create update array and initialize it 
+    // update的作用是将结点连接起来
+    vector<SkipListNode *> update(MAXLVL+1,NULL);
+    for(int i = level; i >= 0; i--) 
+    { 
+        while(current->forward[i] != NULL  && 
+              current->forward[i]->key < key) 
+            current = current->forward[i]; 
+        update[i] = current; 
+    } 
+  
+    current = current->forward[0]; 
+  
+    // If current node is target node 
+    if(current != NULL && current->key == key) 
+    { 
+        for(int i=0;i<=level;i++) 
+        { 
+            if(update[i]->forward[i] != current) 
+                break; 
+  
+            update[i]->forward[i] = current->forward[i]; 
+        } 
+		delete current;
+  
+        // Remove levels having no elements  
+        while(level>0 && 
+              header->forward[level] == 0) 
+            level--; 
+         cout<<"Successfully deleted key "<<key<<"\n"; 
+    } 
+}; 
 
 
 void SkipList::searchElement(int key) {
@@ -179,6 +187,9 @@ void SkipList::searchElement(int key) {
 	cur = cur->forward[0];
 	if (cur && cur->key == key) {
 		cout << "Found Key: " << key << endl;
+	}
+	else {
+		cout<< "Not found key: "<<key<<endl;
 	}
 }
 
@@ -207,7 +218,7 @@ int main()
 
 	// create SkipList object with MAXLVL and P 
 	SkipList lst(3, 0.5); 
-    for(int i=0;i<(1<<20);++i){
+    for(int i=0;i<(1<<10);++i){
         lst.insertElement(i);
     }
 	// lst.insertElement(3); 

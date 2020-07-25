@@ -61,6 +61,8 @@
 ![](image/skiplist3.png)
 
 ### Skip List 定义
+
+
 ```c++
 // skiplist中的结点定义
 struct SkipListNode { 
@@ -76,6 +78,8 @@ struct SkipListNode {
 ```
 其中`forward`数组示意如下，可以看出该数组大小和其层数（高度）相关：
 ![](image/forward.png)
+
+> 应当注意，节点的定义有多种形式，比如有的是上下两个指针`up`和`down`，甚至有的是上下左右四个指针，而不是每个节点指针维护一个`forward`数组。这里选用带有`forward`数组，一是便于理解。而是因为直接从 [GeeksforGeeks-Skip-List](https://www.geeksforgeeks.org/skip-list-set-3-searching-deletion/?ref=lbp) 扒下来的 😁。
 
 ```c++
 // skiplist定义

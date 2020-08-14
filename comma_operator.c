@@ -15,6 +15,7 @@ int main(){
         printf("i=%d\n",i),
         hello(),
         ++i;
+        
     for(i=0;i<3;i++)
         for(int j=0;j<3;++j){
             printf("a[%d][%d]= %d\n",i,j,a[i][j]);

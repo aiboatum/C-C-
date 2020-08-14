@@ -1,6 +1,8 @@
 /.vscode
 *.exe
 *.txt
-tmp.c
-tmp.cpp
-tmp.py
+
+## 临时文件
+/tmp.c
+/tmp.cpp
+/tmp.py
